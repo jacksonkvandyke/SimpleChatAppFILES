@@ -14,6 +14,7 @@ class ConnectionClass:
         self.connectedAddress = None
         self.inputBuffer = []
         self.outputBuffer = []
+        self.releaseThreads = False
 
     def getPort(self):
         return self.port
@@ -56,7 +57,12 @@ class ConnectionClass:
 
     def hostThread(self):
         self.socket.listen(1)
-        self.connectedSocket, self.connectedAddress = self.socket.accept()
+
+        try:
+            self.connectedSocket, self.connectedAddress = self.socket.accept()
+        except:
+            return
+        
         self.hostObject.chatBox()
         self.transmitData()
 
@@ -86,9 +92,14 @@ class ConnectionClass:
             #Check if this is the host socket
             if self.connectedSocket == None:
                 self.connectedSocket = self.socket
-            
-            inputString = ''
-            inputString = self.connectedSocket.recv(1024)
+
+            #Try to recieve data
+            try:
+                inputString = ''
+                inputString = self.connectedSocket.recv(1024)
+            except:
+                self.releaseThreads = True
+                return
 
             #Send input to UI
             self.inputBuffer = self.hostObject.getinputBuffer()
@@ -99,6 +110,10 @@ class ConnectionClass:
 
     def outputThread(self):
         while True:
+            #Close thread
+            if self.releaseThreads == True:
+                return
+            
             outputString = ''
             self.outputBuffer = self.hostObject.getoutputBuffer()
 

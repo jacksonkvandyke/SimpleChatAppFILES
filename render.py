@@ -12,6 +12,7 @@ class UIClass:
         self.inputBuffer = []
         self.outputBuffer = []
         self.socket = None
+        self.releaseThreads = False
 
     #Create window 
     def createWindow(self):
@@ -25,7 +26,16 @@ class UIClass:
 
         #Close local and external socket
         if self.socket != None:
-            self.socket.connectedSocket.close()
+            if self.socket.connectedSocket != None:
+                #Send disconnected message to other user and close the socket
+                text = "The other user has disconnected from the session. Please relaunch the app to start another session."
+                self.outputBuffer.append(text)
+                time.sleep(1)
+                self.releaseThreads = True
+                time.sleep(1)
+
+                self.socket.connectedSocket.close()
+
             self.socket.closeSocket()
 
         return
@@ -149,22 +159,28 @@ class UIClass:
         outputString.set('')
 
         #Add text to sent messages
-        timeString = str(time.localtime().tm_mon) + "/" + str(time.localtime().tm_mday) + "/" + str(time.localtime().tm_year) + "-" + str(time.localtime().tm_hour) + ":" + str(time.localtime().tm_min)
+        timeString = str(time.localtime().tm_mon) + "/" + str(time.localtime().tm_mday) + "/" + str(time.localtime().tm_year) + "-" + str(time.localtime().tm_hour % 12) + ":" + str(time.localtime().tm_min)
         sentMessage = timeString + " |Outgoing| " + text + "\n"
         box['state'] = NORMAL
         box.insert(END, sentMessage, 'grey')
+        box.yview_moveto(1.0)
         box['state'] = DISABLED
 
     def updateBox(self, box):
         while True:
+            #Release thread on program close
+            if self.releaseThreads == True:
+                return
+
             #Loop through inputBuffer
             for message in self.inputBuffer:
                 box['state'] = NORMAL
                 box.insert(END, message)
+                box.yview_moveto(1.0)
+                box['state'] = DISABLED
                 self.inputBuffer.remove(message)
 
             #Sleep to reduce strain on computer
-            box['state'] = DISABLED
             time.sleep(1)
         
     def getinputBuffer(self):
