@@ -36,8 +36,12 @@ class ConnectionClass:
     def setConnection(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        #Get ip address
+        hostName = socket.gethostname()
+        hostIP = socket.gethostbyname(hostName)
+
         try:
-            self.socket.bind(("localhost", random.randrange(40000, 60000)))
+            self.socket.bind((hostIP, random.randrange(40000, 60000)))
         except:
             print("Socket creation was unsuccessful")
             return

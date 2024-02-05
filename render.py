@@ -23,8 +23,9 @@ class UIClass:
 
         mainloop()
 
-        #Close socket
+        #Close local and external socket
         if self.socket != None:
+            self.socket.connectedSocket.close()
             self.socket.closeSocket()
 
         return
